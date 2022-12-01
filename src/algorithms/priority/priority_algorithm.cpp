@@ -19,6 +19,34 @@ PRIORITYScheduler::PRIORITYScheduler(int slice) {
 
 std::shared_ptr<SchedulingDecision> PRIORITYScheduler::get_next_thread() {
     // TODO: implement me!
+    std::shared_ptr<SchedulingDecision> decision = std::make_shared<SchedulingDecision>();
+    if(ready_queue.empty()) {
+        decision->thread = nullptr;
+        decision->explanation = "No threads available for scheduling.";
+    }
+    else{
+        decision->thread = ready_queue.top();
+        decision->explanation = "[S: " +  + "I:"
+        
+        switch(decision->thread->priority){
+            case SYSTEM:
+                
+                break;
+            case INTERACTIVE:
+                
+                break;
+            case NORMAL:
+                
+                break;
+            case BATCH:
+                
+                break;
+        }
+
+        decision->explanation += "Will run to completion of burst.";
+        ready_queue.pop();
+    }
+
     return nullptr;
 }
 

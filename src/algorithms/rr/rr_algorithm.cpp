@@ -11,19 +11,30 @@
 */
 
 RRScheduler::RRScheduler(int slice) {    
-    //TODO Implement me
+    this->time_slice = slice;
 }
 
 std::shared_ptr<SchedulingDecision> RRScheduler::get_next_thread() {
-    //TODO Implement me!
-    return nullptr;
+        std::shared_ptr<SchedulingDecision> decision = std::make_shared<SchedulingDecision>();
+        if(ready_queue.empty()) {
+            decision->thread = nullptr;
+            decision->time_slice = this->time_slice;
+            decision->explanation = "No threads available for scheduling.";
+        }
+        else {
+            decision->thread = ready_queue.front();
+            decision->time_slice = this->time_slice;
+            decision->explanation = "Selected from " + std::to_string(ready_queue.size()) + " threads. Will run for at most " + std::to_string(this->time_slice) + " ticks.";
+            ready_queue.pop();
+        }
+        return decision;
 }
 
 void RRScheduler::add_to_ready_queue(std::shared_ptr<Thread> thread) {
-    //TODO Implement Me
+    ready_queue.push(thread);
+
 }
 
 size_t RRScheduler::size() const {
-    //TODO: Implement me!
-    return 0;
+    return ready_queue.size();
 }

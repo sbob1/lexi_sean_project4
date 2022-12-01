@@ -30,6 +30,9 @@ private:
 
         // TODO: Add any member variables you may need
 
+        //Using a stable_priotiry_queue to push and pop threads for priority
+        Stable_Priority_Queue<std::shared_ptr<Thread>> ready_queue;
+
 public:
 
         //==================================================

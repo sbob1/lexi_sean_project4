@@ -1,7 +1,11 @@
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <vector>
 
 #include "algorithms/fcfs/fcfs_algorithm.hpp"
+#include "algorithms/spn/spn_algorithm.hpp"
+#include "algorithms/rr/rr_algorithm.hpp"
 // TODO: Include your other algorithms as you make them
 
 #include "simulation/simulation.hpp"
@@ -14,9 +18,19 @@ Simulation::Simulation(FlagOptions flags) {
     if (flags.scheduler == "FCFS") {
         // Create a FCFS scheduling algorithm
         this->scheduler = std::make_shared<FCFSScheduler>();
+    }else if(flags.scheduler == "SPN") {
+        this->scheduler = std::make_shared<SPNScheduler>();
+    }else if(flags.scheduler == "RR") {
+        if(flags.time_slice == -1) {
+            this->scheduler = std::make_shared<RRScheduler>();
+        }
+        else{
+            this->scheduler = std::make_shared<RRScheduler>(flags.time_slice);
+        }
+    }
 
     // TODO: Add your other algorithms as you make them
-    } else {
+    else {
         throw("No scheduler found for " + flags.scheduler);        
     }
     this->flags = flags;
@@ -205,7 +219,55 @@ void Simulation::handle_dispatcher_invoked(const std::shared_ptr<Event> event) {
 //==============================================================================
 
 SystemStats Simulation::calculate_statistics() {
-    // TODO: Calculate the system statistics
+    // Map stats will hold the thread count, total turn around time, and total response time for each priority type
+    std::map<int, std::vector<double>> stats = { {0,{0.0,0.0,0.0}},{1,{0.0,0.0,0.0}},{2,{0.0,0.0,0.0}},{3,{0.0,0.0,0.0}} };
+
+    for(auto p : processes) {
+        for(auto t : p.second->threads) {
+            this->system_stats.io_time += t->io_time;
+            this->system_stats.service_time += t->service_time;
+            switch(t->priority){
+                case SYSTEM:
+                    stats[0][0] += 1.0;
+                    stats[0][1] += t->turnaround_time();
+                    stats[0][2] += t->response_time();
+                    break;
+                case INTERACTIVE:
+                    stats[1][0] += 1.0;
+                    stats[1][1] += t->turnaround_time();
+                    stats[1][2] += t->response_time();
+                    break;
+                case NORMAL:
+                    stats[2][0] += 1.0;
+                    stats[2][1] += t->turnaround_time();
+                    stats[2][2] += t->response_time();
+                    break;
+                case BATCH:
+                    stats[3][0] += 1.0;
+                    stats[3][1] += t->turnaround_time();
+                    stats[3][2] += t->response_time();
+                    break;
+            }
+        }
+    }
+
+    for(int i=0; i < 4; i++) {
+        this->system_stats.thread_counts[i] = stats[i][0];
+        if(this->system_stats.thread_counts[i] == 0) {
+            this->system_stats.avg_thread_turnaround_times[i] = 0;
+            this->system_stats.avg_thread_response_times[i] = 0;
+        }
+        else {
+            this->system_stats.avg_thread_turnaround_times[i] = stats[i][1] / stats[i][0];
+            this->system_stats.avg_thread_response_times[i] = stats[i][2] / stats[i][0];
+        }
+    }
+
+    this->system_stats.total_cpu_time = this->system_stats.dispatch_time + this->system_stats.service_time;
+    this->system_stats.total_idle_time = this->system_stats.total_time - this->system_stats.total_cpu_time;
+    this->system_stats.cpu_utilization = 100*((double)this->system_stats.total_cpu_time / this->system_stats.total_time);
+    this->system_stats.cpu_efficiency = 100*((double)this->system_stats.service_time / this->system_stats.total_time);
+
     return this->system_stats;
 }
 

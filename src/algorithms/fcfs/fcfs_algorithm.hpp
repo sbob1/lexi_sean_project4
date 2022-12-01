@@ -22,6 +22,9 @@ public:
     //==================================================
 
     // TODO: Add any member variables you may need.
+    
+    //a standard queue to push and pop threads for fcfs
+     std::queue<std::shared_ptr<Thread>> ready_queue;
 
     //==================================================
     //  Member functions
